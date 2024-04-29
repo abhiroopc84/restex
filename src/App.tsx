@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from "@/components/ui/button";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-
+import * as monaco from "monaco-editor";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -16,135 +17,86 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 import { CodeViewer } from "./components/code-viewer";
 import { PresetActions } from "./components/preset-actions";
 import { PresetSave } from "./components/preset-save";
 import { PresetShare } from "./components/preset-share";
 import { ModeToggle } from "./components/mode-toggle";
 import { AppWindowMac, Columns2 } from "lucide-react";
-import { useState } from "react";
-import resumeString from "./constants/sample-resume";
-import { parse } from "yaml";
-import Resume from "@/models/resume";
+import { useState, useRef } from "react";
 import { toast } from "./components/ui/use-toast";
 import { Toaster } from "./components/ui/toaster";
-import { ToastAction } from "./components/ui/toast";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "./components/ui/drawer";
-import BulletSchema from "@/models/bullet";
-import EducationSchema from "@/models/education";
-import ExperienceSchema from "@/models/experience";
-import GeneralSchema from "@/models/general";
-import OnelineSchema from "@/models/oneline";
-import PublicationSchema from "@/models/publication";
-import TextSchema from "./models/text";
-import { ZodType } from "zod";
-import { ScrollArea } from "./components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./components/ui/dialog";
+import { ScrollArea, ScrollBar } from "./components/ui/scroll-area";
 import { Textarea } from "./components/ui/textarea";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const schemas: { [key: string]: ZodType<any, any, any> } = {
-  text: TextSchema,
-  education: EducationSchema,
-  experience: ExperienceSchema,
-  general: GeneralSchema,
-  oneline: OnelineSchema,
-  publication: PublicationSchema,
-  bullet: BulletSchema,
-};
-
-const yamlParser = (content, setConsoleContent) => {
-  const resumeObject: {
-    header: object;
-    sections: { [key: string]: { type: string; content: [object] } };
-  } = {
-    header: {},
-    sections: {},
-  };
-  const parsed = parse(content);
-  console.log(parsed);
-  //header parse
-  const headerResult = Resume.safeParse(parsed.resume);
-  if (!headerResult.success) {
-    headerResult.error.issues.forEach((issue) =>
-      console.log(issue.path + " " + issue.message)
-    );
-  } else {
-    resumeObject.header = headerResult.data.header;
-  }
-
-  //sections parse
-  const sections = parsed.resume.sections;
-  resumeObject.sections = JSON.parse(JSON.stringify(sections));
-  // eslint-disable-next-line prefer-const
-  for (let i in resumeObject.sections) {
-    resumeObject.sections[i] = { type: "", content: [{}] };
-  }
-  const sectionKeys: string[] = Object.keys(sections);
-  let error = false;
-  // eslint-disable-next-line prefer-const
-  for (let i in sectionKeys) {
-    if (Object.keys(schemas).includes(sections[sectionKeys[i]].type)) {
-      // eslint-disable-next-line prefer-const
-      for (let j in sections[sectionKeys[i]].content) {
-        const result = schemas[sections[sectionKeys[i]].type].safeParse(
-          sections[sectionKeys[i]].content[j]
-        );
-        if (result.success) {
-          resumeObject.sections[sectionKeys[i] as string].content.push({
-            title: sectionKeys[i],
-            schema: sections[sectionKeys[i]].type,
-            content: schemas[sections[sectionKeys[i]].type].parse(
-              sections[sectionKeys[i]].content[j]
-            ),
-          });
-        } else {
-          console.log("Error" + sections[sectionKeys[i]].type);
-          setConsoleContent((prevContent) => [
-            ...prevContent,
-            `Type Error: ${
-              sections[sectionKeys[i]].type
-            } entry at \n${JSON.stringify(
-              sections[sectionKeys[i]].content[j],
-              null,
-              2
-            )} \n${result.error.issues.map(
-              (issue) => issue.path + " - " + issue.message + "\n"
-            )}`,
-          ]);
-          toast({
-            variant: "destructive",
-            title: `Uh oh! Something went wrong.`,
-            description: `There was a problem with your request.`,
-            action: (
-              <ToastAction altText="Show details">Show details</ToastAction>
-            ),
-          });
-          error = true;
-        }
-      }
-    }
-  }
-  if (error == true) {
-    return false;
-  }
-  return resumeObject;
-};
+import Editor, { loader } from "@monaco-editor/react";
+import { Skeleton } from "./components/ui/skeleton";
+import yamlParser from "./helpers/yaml-parser";
+import { ToastAction } from "./components/ui/toast";
 
 export default function App() {
   const [format, setFormat] = useState("");
+  const [errorContent, setErrorContent] = useState([]);
+  const editorRef = useRef(null);
   const [theme, setTheme] = useState("");
-  const [content, setContent] = useState("");
-  const [consoleContent, setConsoleContent] = useState([]);
+  const [errorOpen, setErrorOpen] = useState(false);
+
+  const handleEditorDidMount = (editor, monaco) => {
+    editorRef.current = editor;
+  };
+
+  monaco.editor.defineTheme("abc", {
+    base: "vs-dark",
+    inherit: true,
+    rules: [],
+    colors: {
+      "editor.foreground": "#F8F8F8",
+      "editor.background": "#000000F7",
+      "editor.selectionBackground": "#668CDB9C",
+      "editor.lineHighlightBackground": "#F2ECFF1F",
+      "editorCursor.foreground": "#FFFFFF",
+      "editorWhitespace.foreground": "#616D793D",
+    },
+  });
+  monaco.editor.setTheme("abc");
+
+  loader.config({ monaco });
 
   const handleSubmit = () => {
+    const current = editorRef.current;
+    let content;
+    if (current != null) {
+      content = current.getValue();
+    }
     if (content == "") {
       toast({
         variant: "destructive",
         description: "Resume content cannot be empty.",
       });
     } else {
-      yamlParser(content, setConsoleContent);
+      const yamlResult = yamlParser(content, setErrorContent);
+      console.log(yamlResult);
+      if (!yamlResult) {
+        toast({
+          variant: "destructive",
+          title: `Uh oh! Something went wrong.`,
+          description: `There was a problem with your request.`,
+          action: (
+            <ToastAction
+              altText="Show details"
+              onClick={() => setErrorOpen((prev: boolean) => !prev)}
+            >
+              Show details
+            </ToastAction>
+          ),
+        });
+      }
     }
   };
 
@@ -162,27 +114,40 @@ export default function App() {
             <div className="ml-auto flex space-x-2 sm:justify-end">
               <PresetSave />
               <div className="hidden space-x-2 md:flex">
-                <Drawer>
-                  <DrawerTrigger asChild>
-                    <Button variant="secondary">Console</Button>
-                  </DrawerTrigger>
-                  <DrawerContent className="flex flex-col h-96 items-center">
-                    <DrawerHeader>
-                      <DrawerTitle>Console</DrawerTitle>
-                    </DrawerHeader>
-                    <ScrollArea className="w-full">
-                      <pre className="mt-2 m-10 rounded-md bg-black p-8 min-h-96">
+                <Dialog
+                  open={errorOpen}
+                  onOpenChange={() => {
+                    setErrorOpen((prev) => !prev);
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button variant="secondary">Errors</Button>
+                  </DialogTrigger>
+                  <DialogContent className="flex flex-col h-96 items-center">
+                    <DialogHeader>
+                      <DialogTitle>Errors</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="w-full rounded-md">
+                      <pre className="rounded-md bg-black p-8 min-h-96">
                         <code className="text-white">
                           <ul className=" list-outside list-image-[url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNoZXZyb24tcmlnaHQiPjxwYXRoIGQ9Im05IDE4IDYtNi02LTYiLz48L3N2Zz4=)]">
-                            {consoleContent.map((e) => (
-                              <li>{e}</li>
-                            ))}
+                            {errorContent.length != 0 ? (
+                              errorContent.map((e) => (
+                                <li key={Math.random()}>
+                                  {"> "}
+                                  {e}
+                                </li>
+                              ))
+                            ) : (
+                              <li>{"> No errors!"}</li>
+                            )}
                           </ul>
                         </code>
                       </pre>
+                      <ScrollBar orientation="horizontal" />
                     </ScrollArea>
-                  </DrawerContent>
-                </Drawer>
+                  </DialogContent>
+                </Dialog>
                 <CodeViewer />
                 <PresetShare />
               </div>
@@ -278,12 +243,20 @@ export default function App() {
                 <div className="md:order-1">
                   <TabsContent value="external" className="mt-0 border-0 p-0">
                     <div className="flex h-full flex-col space-y-4">
-                      <Textarea
-                        placeholder="Write the content of your Resume/CV."
-                        className="min-h-[400px] flex-1 p-4 md:min-h-[700px] lg:min-h-[700px]"
-                        value={content}
-                        onChange={(event) => setContent(event.target.value)}
-                      />
+                      <div className="rounded-md border-8 w-[75vw] border-black">
+                        <Editor
+                          height="77vh"
+                          width="74vw"
+                          defaultLanguage="yaml"
+                          defaultValue=""
+                          onMount={handleEditorDidMount}
+                          theme="abc"
+                          loading={
+                            <Skeleton className="h-[90vh] w-full rounded-md" />
+                          }
+                        />
+                      </div>
+
                       <div className="flex items-center space-x-2">
                         <Button onClick={handleSubmit}>Submit</Button>
                       </div>
