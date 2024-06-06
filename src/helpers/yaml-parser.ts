@@ -10,8 +10,6 @@ import { parse } from "yaml";
 import { ZodType } from "zod";
 import Resume from "@/models/resume";
 
-
-
 const schemas: { [key: string]: ZodType<any, any, any> } = {
     text: TextSchema,
     education: EducationSchema,
@@ -24,7 +22,7 @@ const schemas: { [key: string]: ZodType<any, any, any> } = {
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 const yamlParser = (content: string, setConsoleContent: Function) => {
-    setConsoleContent([])
+    setConsoleContent("")
     let error = false;
     const resumeObject: {
       header: object;
@@ -40,42 +38,48 @@ const yamlParser = (content: string, setConsoleContent: Function) => {
     if (!headerResult.success) {
       const paths = headerResult.error.issues.map((issue)=>issue.path)
       if(parsed.resume == null || paths.length == 0 || Object.keys(parsed.resume).length == 0 || Object.keys(parsed.resume).length == 1){
-        setConsoleContent((prevContent: []) => [
-          ...prevContent,
-          `Type Error: Resume entry at \n${JSON.stringify(
+        setConsoleContent((prevContent: string) => 
+          prevContent + 
+          `>Type Error: Resume entry at \n${JSON.stringify(
             parsed.resume,
             null,
             2
           )} \n${headerResult.error.issues.map(
             (issue) => issue.path + " - " + issue.message
-          )}`,
-        ]);
+          )}
+          
+          `,
+        );
         return false;
       }
       else if(paths.every((path)=>path.includes("sections"))){
-        setConsoleContent((prevContent: []) => [
-          ...prevContent,
-          `Type Error: Sections entry at \n${JSON.stringify(
+        setConsoleContent((prevContent: string) => 
+          prevContent + 
+          `>Type Error: Sections entry at \n${JSON.stringify(
             parsed.resume.sections,
             null,
             2
           )} \n${headerResult.error.issues.map(
             (issue) => issue.path + " - " + issue.message
-          )}`,
-        ]);
+          )}
+          
+          `,
+        );
         return false;
       }
       else {
-        setConsoleContent((prevContent: []) => [
-          ...prevContent,
-          `Type Error: Header entry at \n${JSON.stringify(
+        setConsoleContent((prevContent: string) => 
+          prevContent + 
+          `>Type Error: Header entry at \n${JSON.stringify(
             parsed.resume.header,
             null,
             2
           )} \n${headerResult.error.issues.map(
             (issue) => issue.path + " - " + issue.message
-          )}`,
-        ]);
+          )}
+          
+          `,
+        );
         return false;
       }
     } else {
@@ -100,9 +104,9 @@ const yamlParser = (content: string, setConsoleContent: Function) => {
             continue;
           } else {
             console.log("Error" + sections[sectionKeys[i]].type);
-            setConsoleContent((prevContent: []) => [
-              ...prevContent,
-              `Type Error: ${
+            setConsoleContent((prevContent: string) => 
+              prevContent +
+              `>Type Error: ${
                 sections[sectionKeys[i]].type
               } entry at \n${JSON.stringify(
                 sections[sectionKeys[i]].content[j],
@@ -110,8 +114,10 @@ const yamlParser = (content: string, setConsoleContent: Function) => {
                 2
               )} \n${result.error.issues.map(
                 (issue) => issue.path + " - " + issue.message
-              )}`,
-            ]);
+              )}
+              
+              `,
+            );
             error = true;
           }
         }
