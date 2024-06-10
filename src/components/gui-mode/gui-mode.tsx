@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DndContext,
@@ -26,9 +25,19 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import React from "react";
-import { useState } from "react";
-import { MdDragIndicator } from "react-icons/md";
+import { CirclePlus, GripVertical } from "lucide-react";
+import { useContext, useState } from "react";
+import { SectionsContext } from "../context/sections-provider";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { schemas } from "@/helpers/yaml-parser";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "../ui/command";
 
 function HeaderForm({ data, onDataChange }) {
   return (
@@ -38,13 +47,10 @@ function HeaderForm({ data, onDataChange }) {
   );
 }
 
-export function GuiMode() {
-  const [sections, setSections] = useState([
-    { id: 1, name: "section1" },
-    { id: 2, name: "section2" },
-    { id: 3, name: "section3" },
-    { id: 4, name: "section4" },
-  ]);
+export const GuiMode = () => {
+  const { sections, setSections } = useContext(SectionsContext);
+  const [typeOpen, setTypeOpen] = useState<boolean>(false);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -67,21 +73,84 @@ export function GuiMode() {
     }
   }
 
-  function handleNewSection() {
+  const handleNewSection = (type: string) => {
     const newSection = {
       id: sections.length + 1,
       name: "section" + (sections.length + 1),
+      type: type,
     };
 
-    setSections([...sections, newSection]);
-  }
+    setSections((sections) => [...sections, newSection]);
+  };
 
   return (
     <Tabs defaultValue="header" className="flex gap-2 h-full">
-      <TabsList className="flex-col h-full justify-start items-start gap-2 w-1/4">
-        <Button className="w-full" onClick={handleNewSection}>
-          New Section
-        </Button>
+      <TabsList className="flex-col h-full justify-start items-start gap-2 w-1/4 p-2">
+        {/* <Popover open={typeOpen} onOpenChange={setTypeOpen}>
+          <PopoverTrigger className="w-full" asChild>
+            <Button className="w-full">
+              <CirclePlus className="mr-2 h-4 w-4" />
+              New Section
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0" align="center">
+            <Command>
+              <CommandInput placeholder="Search type" />
+              <CommandList>
+                <CommandGroup>
+                  {Object.keys(schemas).map((schema) => {
+                    const name =
+                      schema[0].toUpperCase() + schema.slice(1) + " Entry";
+                    return (
+                      <CommandItem
+                        key={schema}
+                        value={schema}
+                        onSelect={(value) => {
+                          handleNewSection(value);
+                          setTypeOpen(false);
+                        }}
+                      >
+                        {name}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover> */}
+        <Popover open={typeOpen} onOpenChange={setTypeOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              className="w-[200px] justify-between"
+            >
+              "Select framework..."
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[200px] p-0">
+            <Command>
+              <CommandInput placeholder="Search framework..." className="h-9" />
+              <CommandList>
+                <CommandEmpty>No framework found.</CommandEmpty>
+                <CommandGroup>
+                  {Object.keys(schemas).map((schema) => (
+                    <CommandItem
+                      key={schema}
+                      value={schema}
+                      onSelect={() => {
+                        setTypeOpen(false);
+                      }}
+                    >
+                      {schema}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
         <TabsTrigger value="header" className="w-full justify-start h-10">
           Header
         </TabsTrigger>
@@ -123,7 +192,7 @@ export function GuiMode() {
           <Card>
             <CardHeader>
               <CardTitle>{section.name}</CardTitle>
-              <CardDescription>section type goes here</CardDescription>
+              <CardDescription>{section.type}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">form goes here</CardContent>
             <CardFooter>
@@ -134,7 +203,7 @@ export function GuiMode() {
       ))}
     </Tabs>
   );
-}
+};
 
 function SectionTrigger(props) {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -153,7 +222,7 @@ function SectionTrigger(props) {
       >
         {props.name}
         <Button variant="ghost" {...listeners} className="py-1 px-1 rounded">
-          <MdDragIndicator />
+          <GripVertical className="h-4 w-4" />
         </Button>
       </TabsTrigger>
     </div>

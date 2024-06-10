@@ -2,8 +2,12 @@ import { Blocks, Text } from "lucide-react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../ui/hover-card";
 import { TabsList, TabsTrigger } from "../ui/tabs";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { useContext } from "react";
+import { TemplateContext } from "../context/template-provider";
 
-export const Sidebar = ({template, setTemplate}:{template: string | undefined, setTemplate: (arg0: string) => void}) => {
+export const Sidebar = () => {
+  const { template, setTemplate } = useContext(TemplateContext);
+  
   return (
     <div className="flex-col space-y-4 sm:flex md:order-2">
       <div className="grid gap-2">

@@ -9,9 +9,15 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import TextareaCodeEditor from "@uiw/react-textarea-code-editor";
-import { CircleAlert } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
+import { useContext } from "react";
+import { ErrorContext } from "../context/error-provider";
+import { ErrorOpenContext } from "../context/erroropen-provider";
 
-export function ErrorConsole({errorContent, errorOpen, setErrorOpen}:{errorContent: string, errorOpen: boolean, setErrorOpen: (arg0: (prev: boolean) => boolean) => void}) {
+export function ErrorConsole() {
+  const { error } = useContext(ErrorContext);
+  const { errorOpen, setErrorOpen } = useContext(ErrorOpenContext);
+
   return (
     <>
       <Dialog
@@ -22,11 +28,10 @@ export function ErrorConsole({errorContent, errorOpen, setErrorOpen}:{errorConte
       >
         <DialogTrigger asChild>
           <Button
-            variant="outline"
-            className="outline-offset-0 enabled:dark:bg-[#2d0607] enabled:bg-[#fff0f0] enabled:outline-2 enabled:outline enabled:dark:outline-[#4d0408] enabled:outline-[#FFE0E1]"
-            disabled={errorContent == "" ? true : false}
+            variant="secondary"
+            disabled={error == "" ? true : false}
           >
-            <CircleAlert className="mr-2 h-4 w-4"/>Errors
+            <TriangleAlert className="mr-2 h-4 w-4"/>Errors
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[625px]">
@@ -37,9 +42,9 @@ export function ErrorConsole({errorContent, errorOpen, setErrorOpen}:{errorConte
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
-            <ScrollArea className="rounded-md bg-black p-6 max-w-[625px] h-[50vh]">
+            <ScrollArea className="rounded-md bg-black p-2 max-w-[625px] h-[50vh]">
               <TextareaCodeEditor
-                value={errorContent}
+                value={error}
                 language="javascript"
                 placeholder="No errors!"
                 disabled

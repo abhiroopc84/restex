@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { DotsHorizontalIcon } from "@radix-ui/react-icons"
 
 import {
@@ -21,10 +20,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { Trash2 } from "lucide-react"
+import { YamlContext } from "../context/yaml-provider"
+import { useContext, useState } from "react"
 
 
-export function Actions({setContent}:{setContent: (arg0: string) => void}) {
-  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
+export const Actions = () => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const {setYaml} = useContext(YamlContext);
 
   return (
     <>
@@ -58,7 +60,7 @@ export function Actions({setContent}:{setContent: (arg0: string) => void}) {
             <Button
               variant="destructive"
               onClick={() => {
-                setContent("")
+                setYaml("")
                 toast.success("The input has been cleared.")
               }}
             >

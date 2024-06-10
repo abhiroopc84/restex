@@ -10,7 +10,7 @@ import { parse } from "yaml";
 import { ZodType } from "zod";
 import Resume from "@/models/resume";
 
-const schemas: { [key: string]: ZodType<any, any, any> } = {
+export const schemas: { [key: string]: ZodType<any, any, any> } = {
     text: TextSchema,
     education: EducationSchema,
     experience: ExperienceSchema,

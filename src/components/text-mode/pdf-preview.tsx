@@ -1,9 +1,16 @@
-export const PdfPreviewer = ({compiled, pdfURL}:{compiled: string, pdfURL: string}) => {
+import { useContext } from "react";
+import { CompileStatusContext } from "../context/compilestatus-provider";
+import { PdfurlContext } from "../context/pdfurl-provider";
+
+export const PdfPreviewer = () => {
+  const {compileStatus} = useContext(CompileStatusContext);
+  const {pdfurl} = useContext(PdfurlContext);
+
   return (
     <div className="rounded-md border bg-muted">
-      {compiled=="finished" && (
+      {compileStatus=="success" && (
         <object
-          data={pdfURL}
+          data={pdfurl}
           type="application/pdf"
           width="100%"
           height="100%"
