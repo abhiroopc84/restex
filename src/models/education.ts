@@ -12,6 +12,7 @@ const EducationSchema = z.object({
     end_date: z.string().regex(/\b\d{4}-(?:0[1-9]|1[0-2])(-(?:0[1-9]|[1-2][0-9]|3[01])){0,1}\b/,{ message: "Invalid date" }).transform((val)=>{
         return dateParser(val);
     }),
+    current: z.boolean(),
     GPA: z.string().optional(),
     highlights: z.array(z.string()).optional(),
 })
