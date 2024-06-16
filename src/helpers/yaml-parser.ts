@@ -1,24 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import BulletSchema from "@/models/bullet";
-import EducationSchema from "@/models/education";
-import ExperienceSchema from "@/models/experience";
-import GeneralSchema from "@/models/general";
-import OnelineSchema from "@/models/oneline";
-import PublicationSchema from "@/models/publication";
-import TextSchema from "@/models/text";
-import { parse } from "yaml";
-import { ZodType } from "zod";
-import Resume from "@/models/resume";
 
-export const schemas: { [key: string]: ZodType<any, any, any> } = {
-    text: TextSchema,
-    education: EducationSchema,
-    experience: ExperienceSchema,
-    general: GeneralSchema,
-    oneline: OnelineSchema,
-    publication: PublicationSchema,
-    bullet: BulletSchema,
-  };
+import { parse } from "yaml";
+import Resume from "@/models/resume";
+import { schemas } from "@/models/schemas";
+
+
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 const yamlParser = (content: string, setConsoleContent: Function) => {

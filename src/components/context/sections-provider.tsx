@@ -4,6 +4,7 @@ type sections = {
     id: number
     name: string
     type: string
+    values: { [key: string]: any };
 }[]
 
 type SectionsState = {
@@ -12,14 +13,14 @@ type SectionsState = {
 }
 
 const initialState: SectionsState = {
-    sections: [{ id: 1, name: "section1", type: "general" }],
+    sections: [{id: 0, name: "header", type: "header", values: {}}, { id: 1, name: "section1", type: "general", values: {} }],
     setSections: () => null,
 }
 
 export const SectionsContext = createContext(initialState);
 
 export const SectionsProvider = ({children} : {children:ReactNode}) => {
-    const [sections, setSections] = useState<sections>([{ id: 1, name: "section1", type: "general" }]);
+    const [sections, setSections] = useState<sections>([{id: 0, name: "header", type: "header", values: {}},{ id: 1, name: "section1", type: "general", values: {} }]);
 
     return (
         <SectionsContext.Provider value={{sections, setSections}}>

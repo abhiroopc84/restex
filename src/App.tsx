@@ -51,9 +51,6 @@ export default function App() {
                                   >
                                     <div className="flex h-[75vh] w-full flex-col space-y-4">
                                       <GuiMode />
-                                      <div className="flex items-center space-x-2">
-                                        <Button>Submit</Button>
-                                      </div>
                                     </div>
                                   </TabsContent>
                                 </div>

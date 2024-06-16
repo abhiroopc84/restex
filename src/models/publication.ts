@@ -11,4 +11,12 @@ const PublicationSchema = z.object({
     doi: z.string().regex(/^(10\.\d{4,5}\/[\S]+[^;,.\s])$/,{ message: "Invalid doi" }),
 })
 
-export default PublicationSchema;
+const PublicationGuiSchema = z.object({
+    title: z.string(),
+    authors: z.array(z.string()),
+    date: z.date(),
+    journal: z.string(),
+    doi: z.string().regex(/^(10\.\d{4,5}\/[\S]+[^;,.\s])$/,{ message: "Invalid doi" }),
+})
+
+export default {PublicationSchema, PublicationGuiSchema};

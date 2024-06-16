@@ -17,4 +17,16 @@ const EducationSchema = z.object({
     highlights: z.array(z.string()).optional(),
 })
 
-export default EducationSchema;
+const EducationGuiSchema = z.object({
+    institution: z.string(),
+    location: z.string(),
+    degree: z.string(),
+    field: z.string().optional(),
+    start_date: z.date(),
+    end_date: z.date().optional(),
+    current: z.boolean(),
+    GPA: z.string().optional(),
+    highlights: z.array(z.string()).optional(),
+})
+
+export default { EducationSchema, EducationGuiSchema };

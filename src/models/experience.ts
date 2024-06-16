@@ -15,4 +15,14 @@ const ExperienceSchema = z.object({
     highlights: z.array(z.string()).optional(),
 })
 
-export default ExperienceSchema;
+const ExperienceGuiSchema = z.object({
+    company: z.string(),
+    location: z.string(),
+    position: z.string(),
+    start_date: z.date(),
+    end_date: z.date().optional(),
+    current: z.boolean(),
+    highlights: z.array(z.string()).optional(),
+})
+
+export default { ExperienceSchema, ExperienceGuiSchema };
