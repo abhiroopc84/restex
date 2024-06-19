@@ -17,7 +17,7 @@ A form based resume generator with a $\LaTeX$ resume generator framework.
 
  ## About The Project
 
-![Product Screenshot](./public/text_mode_screen.png)
+![Product Screenshot](./public/textmode_screen.png)
 
 There are many great resume generators out there, however, I didn't find one that really boils down the simplicity and the reason for that is because I believe your time should be focused on the resume content and on the design of it, but both of these should be addressed seperately.
 
@@ -60,7 +60,7 @@ _Below is an example of how you can instruct your audience on installing and set
  ## Usage
 
 Text-mode:
-![TextMode Screenshot](./public/text_mode_screen.png)
+![TextMode Screenshot](./public/textmode_screen.png)
 
 
 <!-- _For more examples, please refer to the [Documentation](https://example.com)_ -->
