@@ -3,7 +3,7 @@ const sampleResume = `resume:
     name: John Doe
     location: Bangalore, India
     email: johndoe@example.com
-    phone: +91-9876543210
+    phone: 9876543210
     social_networks:
       - network: LinkedIn
         username: johndoe
@@ -89,7 +89,7 @@ const sampleResume = `resume:
             - Mastered complex data structures and algorithms.
             - Implemented efficient solutions to a variety of computational problems.
     Publications:
-      type: general
+      type: publication
       content:
         - title: Efficient Algorithms for Data Processing
           authors:
