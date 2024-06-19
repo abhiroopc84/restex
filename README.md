@@ -1,8 +1,8 @@
                          
 <br/>
 <div align="center">
-<a href="https://github.com/ShaanCoding/ReadME-Generator">
-<img src="https://i.ibb.co/8d61m0y/restex-logo.png" alt="Logo" width="80" height="80">
+<a href="https://github.com/abhiroopc84/restex">
+<img src="./public/restex.svg" alt="Logo" width="80" height="80">
 </a>
 <h3 align="center">restex</h3>
 <p align="center">
