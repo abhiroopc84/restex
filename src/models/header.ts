@@ -10,7 +10,7 @@ const HeaderSchema = z.object({
     location: z.string(),
     email: z.string().email(),
     phone: z.coerce.string().regex(/^(\+*\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,{ message: "Invalid phone" }).optional(),
-    website: z.string().url().optional(),
+    website: z.optional(z.string().url()),
     social_networks: z.array(social_networks).optional(),
 });
 

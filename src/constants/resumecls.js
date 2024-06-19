@@ -1,9 +1,3 @@
-/* eslint-disable prefer-const */
-import { PdfTeXEngine } from "@/helpers/swiftlatex/PdfTeXEngine";
-
-
-const engine = new PdfTeXEngine();
-
 const resumecls = `%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Medium Length Professional CV - RESUME CLASS FILE
 %
@@ -143,27 +137,6 @@ const resumecls = `%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \\def\\sectionlineskip{\\medskip} % The space above the horizontal line for each section 
 \\def\\nameskip{\\medskip} % The space after your name at the top
 \\def\\sectionskip{\\medskip} % The space after the heading section
-`
+`;
 
-const latexCompiler = async (latexCode: string) => {
-    try {
-        await engine.loadEngine();
-      } catch (e) {console.error(e)}
-
-      engine.writeMemFSFile("main.tex", latexCode);
-      engine.writeMemFSFile("resume.cls", resumecls);
-      engine.setEngineMainFile("main.tex");
-      let PdftexCompilation = await engine.compileLaTeX();
-      console.log(PdftexCompilation.log);
-
-      if (PdftexCompilation.status === 0) {
-        const pdfBlob = new Blob([PdftexCompilation.pdf], {type : 'application/pdf'});
-        const pdfurl = URL.createObjectURL(pdfBlob);
-        return (pdfurl);
-      } else {
-        console.log("pdf error")
-        return false;
-      }
-};
-
-export default latexCompiler;
+export default resumecls;

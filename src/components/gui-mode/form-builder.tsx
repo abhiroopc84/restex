@@ -7,8 +7,9 @@ import {
   ZodOptional,
   ZodEffects,
   ZodDate,
+  ZodSchema,
 } from "zod";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -20,17 +21,17 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
-import { Checkbox } from "../ui/checkbox";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar } from "../ui/calendar";
 import { CalendarIcon, CirclePlus, Trash2 } from "lucide-react";
-
+import { Textarea } from "../ui/textarea";
+import { Switch } from "../ui/switch";
 
 const generateDefaultValues = (schema: ZodObject<any>) => {
-  const fields = schema instanceof ZodObject ? schema.shape : { text: schema };
+  const fields = schema.shape;
   const defaultValues: any = {};
 
   Object.keys(fields).forEach((key) => {
@@ -59,8 +60,81 @@ const generateDefaultValues = (schema: ZodObject<any>) => {
   return defaultValues;
 };
 
-const generateFormFields = (schema: ZodSchema, control: any) => {
-  const fields = schema instanceof ZodObject ? schema.shape : { text: schema };
+const ArrayField = ({
+  fieldkey,
+  control,
+  label,
+}: {
+  fieldkey: string;
+  control: any;
+  label: string;
+}) => {
+  const {
+    fields: arrayFields,
+    append,
+    remove,
+  } = useFieldArray({
+    control,
+    name: fieldkey,
+  });
+
+  return (
+    <FormItem key={fieldkey}>
+      <FormLabel className="flex flex-row items-center gap-2">
+        {label}
+        <Button
+          size="icon"
+          onClick={(e) => {
+            e.preventDefault();
+            append("");
+          }}
+        >
+          <CirclePlus className="w-4 h-4" />
+        </Button>
+      </FormLabel>
+      {arrayFields.map((item, index) => (
+        <FormField
+          key={item.id}
+          control={control}
+          name={`${fieldkey}[${index}]`}
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex flex-row items-center gap-2">
+                <FormControl>
+                  <Input
+                    placeholder={`Enter ${fieldkey} item ${index + 1}`}
+                    {...field}
+                  />
+                </FormControl>
+                <Button
+                  size="icon"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    remove(index);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ))}
+      <FormMessage />
+    </FormItem>
+  );
+};
+
+const FormFields = ({
+  schema,
+  control,
+}: {
+  schema: ZodObject<any, any, any>;
+  control: any;
+}) => {
+  const fields = schema.shape;
+  const currentField = useWatch({ control, name: "current" });
 
   return Object.keys(fields).map((key) => {
     const fieldSchema = fields[key];
@@ -71,11 +145,18 @@ const generateFormFields = (schema: ZodSchema, control: any) => {
         return word[0].toUpperCase() + word.substring(1);
       })
       .join(" ");
+    if (!(fieldSchema instanceof ZodOptional)) {
+      label = label + "*";
+    }
 
     const actualFieldSchema =
       fieldSchema instanceof ZodOptional || fieldSchema instanceof ZodEffects
         ? fieldSchema._def.innerType || fieldSchema._def.schema
         : fieldSchema;
+
+    if (key === "end_date" && currentField) {
+      return null;
+    }
 
     if (actualFieldSchema instanceof ZodDate) {
       return (
@@ -117,13 +198,30 @@ const generateFormFields = (schema: ZodSchema, control: any) => {
                   />
                 </PopoverContent>
               </Popover>
-              <FormDescription>{/* Optional description */}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
       );
     } else if (actualFieldSchema instanceof ZodString) {
+      if (key === "text") {
+        return (
+          <FormField
+            key={key}
+            control={control}
+            name={key}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{label}</FormLabel>
+                <FormControl>
+                  <Textarea placeholder={`Enter ${key}`} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        );
+      }
       return (
         <FormField
           key={key}
@@ -135,7 +233,6 @@ const generateFormFields = (schema: ZodSchema, control: any) => {
               <FormControl>
                 <Input placeholder={`Enter ${key}`} {...field} />
               </FormControl>
-              <FormDescription>{/* Optional description */}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -153,7 +250,6 @@ const generateFormFields = (schema: ZodSchema, control: any) => {
               <FormControl>
                 <Input type="number" placeholder={`Enter ${key}`} {...field} />
               </FormControl>
-              <FormDescription>{/* Optional description */}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -166,15 +262,19 @@ const generateFormFields = (schema: ZodSchema, control: any) => {
           control={control}
           name={key}
           render={({ field }) => (
-            <FormItem className="flex flex-row gap-2">
-              <FormLabel>{label}</FormLabel>
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">
+                  {label.slice(0, label.length - 1)}
+                </FormLabel>
+                <FormDescription>Is this entry ongoing?</FormDescription>
+              </div>
               <FormControl>
-                <Checkbox
+                <Switch
                   checked={field.value}
                   onCheckedChange={field.onChange}
                 />
               </FormControl>
-              <FormMessage />
             </FormItem>
           )}
         />
@@ -183,62 +283,10 @@ const generateFormFields = (schema: ZodSchema, control: any) => {
       actualFieldSchema instanceof ZodArray &&
       actualFieldSchema._def.type instanceof ZodString
     ) {
-      const {
-        fields: arrayFields,
-        append,
-        remove,
-      } = useFieldArray({
-        control,
-        name: key,
-      });
-
       return (
-        <FormItem key={key}>
-          <FormLabel className="flex flex-row items-center gap-2">
-            {label}
-            <Button
-              size="icon"
-              onClick={(e) => {
-                e.preventDefault();
-                append("");
-              }}
-            >
-              <CirclePlus className="w-4 h-4" />
-            </Button>
-          </FormLabel>
-          {arrayFields.map((item, index) => (
-            <FormField
-              key={item.id}
-              control={control}
-              name={`${key}[${index}]`}
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex flex-row items-center gap-2">
-                    <FormControl>
-                      <Input
-                        placeholder={`Enter ${key} item ${index + 1}`}
-                        {...field}
-                      />
-                    </FormControl>
-                    <Button
-                      size="icon"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        remove(index);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-
-          <FormDescription>{/* Optional description */}</FormDescription>
-          <FormMessage />
-        </FormItem>
+        <div key={key}>
+          <ArrayField fieldkey={key} control={control} label={label} />
+        </div>
       );
     } else if (
       actualFieldSchema instanceof ZodArray &&
@@ -292,7 +340,6 @@ const generateFormFields = (schema: ZodSchema, control: any) => {
               </div>
             </div>
           ))}
-          <FormDescription>{/* Optional description */}</FormDescription>
           <FormMessage />
         </FormItem>
       );
@@ -327,8 +374,8 @@ const FormBuilder = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {generateFormFields(formSchema, form.control)}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-3/4">
+        <FormFields schema={formSchema} control={form.control} />
         <Button type="submit">Save Changes</Button>
       </form>
     </Form>

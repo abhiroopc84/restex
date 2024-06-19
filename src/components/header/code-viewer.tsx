@@ -13,7 +13,7 @@ import { CopyIcon, View } from "lucide-react";
 import { useContext } from "react";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { toast } from "sonner";
-import { LatexContext } from "../context/latex-provider";
+import { LatexContext } from "../../context/latex-provider";
 
 export function CodeViewer() {
   const { latex } = useContext(LatexContext);

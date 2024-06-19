@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area"
 import TextareaCodeEditor from "@uiw/react-textarea-code-editor";
-import { YamlContext } from "../context/yaml-provider";
+import { YamlContext } from "../../context/yaml-provider";
 
 export const TextEditor = () => {
     const {yaml, setYaml} = useContext(YamlContext);

@@ -11,8 +11,8 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import TextareaCodeEditor from "@uiw/react-textarea-code-editor";
 import { TriangleAlert } from "lucide-react";
 import { useContext } from "react";
-import { ErrorContext } from "../context/error-provider";
-import { ErrorOpenContext } from "../context/erroropen-provider";
+import { ErrorContext } from "../../context/error-provider";
+import { ErrorOpenContext } from "../../context/erroropen-provider";
 
 export function ErrorConsole() {
   const { error } = useContext(ErrorContext);

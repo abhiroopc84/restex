@@ -1,14 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { parse } from "yaml";
 import Resume from "@/models/resume";
 import { schemas } from "@/models/schemas";
 
-
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-const yamlParser = (content: string, setConsoleContent: Function) => {
-    setConsoleContent("")
+const yamlParser = (content: string, setError: (error: (prev: string) => string) => void) => {
+    setError(()=>"")
     let error = false;
     const resumeObject: {
       header: object;
@@ -19,12 +14,12 @@ const yamlParser = (content: string, setConsoleContent: Function) => {
     };
     const parsed = parse(content);
 
-    //header parse
+    //Header Section Parsing
     const headerResult = Resume.safeParse(parsed.resume);
     if (!headerResult.success) {
       const paths = headerResult.error.issues.map((issue)=>issue.path)
       if(parsed.resume == null || paths.length == 0 || Object.keys(parsed.resume).length == 0 || Object.keys(parsed.resume).length == 1){
-        setConsoleContent((prevContent: string) => 
+        setError((prevContent: string) => 
           prevContent + 
           `>Type Error: Resume entry at \n${JSON.stringify(
             parsed.resume,
@@ -32,14 +27,13 @@ const yamlParser = (content: string, setConsoleContent: Function) => {
             2
           )} \n${headerResult.error.issues.map(
             (issue) => issue.path + " - " + issue.message
-          )}
-          
+          )}          
           `,
         );
         return false;
       }
       else if(paths.every((path)=>path.includes("sections"))){
-        setConsoleContent((prevContent: string) => 
+        setError((prevContent: string) => 
           prevContent + 
           `>Type Error: Sections entry at \n${JSON.stringify(
             parsed.resume.sections,
@@ -54,7 +48,7 @@ const yamlParser = (content: string, setConsoleContent: Function) => {
         return false;
       }
       else {
-        setConsoleContent((prevContent: string) => 
+        setError((prevContent: string) => 
           prevContent + 
           `>Type Error: Header entry at \n${JSON.stringify(
             parsed.resume.header,
@@ -72,16 +66,13 @@ const yamlParser = (content: string, setConsoleContent: Function) => {
       resumeObject.header = headerResult.data.header;
     }
   
-    //sections parse
+    //Sections Parsing
     const sections = parsed.resume.sections;
     resumeObject.sections = JSON.parse(JSON.stringify(sections));
-    // eslint-disable-next-line prefer-const
     const sectionKeys: string[] = Object.keys(sections);
-    // eslint-disable-next-line prefer-const
-    for (let i in sectionKeys) {
+    for (const i in sectionKeys) {
       if (Object.keys(schemas).includes(sections[sectionKeys[i]].type)) {
-        // eslint-disable-next-line prefer-const
-        for (let j in sections[sectionKeys[i]].content) {
+        for (const j in sections[sectionKeys[i]].content) {
           const result = schemas[sections[sectionKeys[i]].type].safeParse(
             sections[sectionKeys[i]].content[j]
           );
@@ -90,7 +81,7 @@ const yamlParser = (content: string, setConsoleContent: Function) => {
             continue;
           } else {
             console.log("Error" + sections[sectionKeys[i]].type);
-            setConsoleContent((prevContent: string) => 
+            setError((prevContent: string) => 
               prevContent +
               `>Type Error: ${
                 sections[sectionKeys[i]].type
@@ -102,7 +93,7 @@ const yamlParser = (content: string, setConsoleContent: Function) => {
                 (issue) => issue.path + " - " + issue.message
               )}
               
-              `,
+`,
             );
             error = true;
           }
@@ -112,6 +103,7 @@ const yamlParser = (content: string, setConsoleContent: Function) => {
     if (error == true) {
       return false;
     }
+    console.log(resumeObject)
     return resumeObject;
   };
 

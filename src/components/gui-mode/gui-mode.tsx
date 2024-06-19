@@ -3,7 +3,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -24,9 +23,16 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CirclePlus, GripVertical, Pencil, Save, Trash2 } from "lucide-react";
-import { useContext, useState } from "react";
-import { SectionsContext } from "../context/sections-provider";
+import {
+  CirclePlus,
+  GripVertical,
+  Pencil,
+  PlusCircle,
+  Save,
+  Trash2,
+} from "lucide-react";
+import { useContext, useEffect, useState } from "react";
+import { SectionsContext } from "../../context/sections-provider";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import {
   Command,
@@ -45,21 +51,69 @@ import {
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
 import { Input } from "../ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
+import guidataHandler from "@/utils/guidata-handler";
+import { formatLaTeX } from "@/utils/latex-formatter";
+import faangpath from "@/templates/faangpath";
+import latexCompiler from "@/utils/latex-compiler";
+import { CompileStatusContext } from "../../context/compilestatus-provider";
+import { LatexContext } from "../../context/latex-provider";
+import { PdfurlContext } from "../../context/pdfurl-provider";
 
 export const GuiMode = () => {
   const { sections, setSections } = useContext(SectionsContext);
+  const { setCompileStatus } = useContext(CompileStatusContext);
+  const { setLatex } = useContext(LatexContext);
+  const { setPdfurl } = useContext(PdfurlContext);
   const [typeOpen, setTypeOpen] = useState<boolean>(false);
   const [edit, setEdit] = useState<boolean>(false);
   const [title, setTitle] = useState<string>("");
   const [currSection, setCurrSection] = useState<string>("header");
+  const [allSaved, setAllSaved] = useState<boolean>(false);
 
-  const handleFormSubmit = (sectionId: number, values: any) => {
+  useEffect(() => {
+    let all = true;
+    sections.length == 0 ? all = false : all;
+    sections.forEach((section) => {
+      section.values.forEach((value) => {
+        Object.keys(value).length === 0 ? (all = false) : all;
+      });
+    });
+    if (all) {
+      setAllSaved(true);
+    } else {
+      setAllSaved(false);
+    }
+  }, [sections]);
+
+  const handleFormSubmit = (
+    sectionId: number,
+    subSectIndex: number,
+    formValues: any
+  ) => {
+    console.log("call");
     setSections((sections) =>
       sections.map((section) =>
-        section.id === sectionId ? { ...section, values } : section
+        section.id === sectionId
+          ? {
+              ...section,
+              values: section.values.map((valGrp, index) =>
+                index == subSectIndex ? formValues : valGrp
+              ),
+            }
+          : section
       )
     );
-    console.log(values);
   };
 
   const sensors = useSensors(
@@ -88,8 +142,9 @@ export const GuiMode = () => {
     const newSection = {
       id: sections.length,
       name: "section" + sections.length,
+      length: 1,
       type: type,
-      values: {},
+      values: [{}],
     };
 
     setSections((sections) => [...sections, newSection]);
@@ -103,7 +158,7 @@ export const GuiMode = () => {
         onValueChange={(value) => setCurrSection(value)}
         className="flex h-full gap-2"
       >
-        <div className="relative w-1/4">
+        <div className="relative w-1/4 flex flex-col gap-2">
           <ScrollArea className="h-[74vh] relative overflow-x-hidden bg-muted rounded-md py-2">
             <div className="px-2 absolute z-10 w-full">
               <Popover open={typeOpen} onOpenChange={setTypeOpen}>
@@ -175,6 +230,29 @@ export const GuiMode = () => {
               </DndContext>
             </TabsList>
           </ScrollArea>
+          <Button
+            disabled={!allSaved}
+            onClick={() => {
+              const resumeObject = guidataHandler(sections);
+              console.log(resumeObject)
+              setCompileStatus(()=>"inprogress");
+              const latexCode = faangpath(resumeObject);
+              const fCode = formatLaTeX(latexCode);
+              (() => {
+                setLatex(fCode);
+              })();
+              console.log(latexCode);
+              const url = latexCompiler(latexCode);
+              url.then((value) => {
+                if (value) {
+                  setCompileStatus(()=>"success");
+                  setPdfurl(()=>value);
+                }
+              });
+            }}
+          >
+            Render
+          </Button>
         </div>
         <TabsContent value="header" className="w-full mt-0">
           <Card>
@@ -184,9 +262,9 @@ export const GuiMode = () => {
             <CardContent className="space-y-2">
               <FormBuilder
                 formSchema={HeaderSchema}
-                initialValues={sections[0].values || {}}
+                initialValues={sections[0].values[0]}
                 handleFormSubmit={(values) =>
-                  handleFormSubmit(sections[0].id, values)
+                  handleFormSubmit(sections[0].id, 0, values)
                 }
               />
             </CardContent>
@@ -242,18 +320,143 @@ export const GuiMode = () => {
                     {section.type[0].toUpperCase() + section.type.slice(1)}
                   </CardDescription>
                 </div>
-                <Button size="icon" variant="destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="icon"
+                    onClick={() =>
+                      setSections((prev) =>
+                        prev.map((prevsect) =>
+                          prevsect.id === section.id
+                            ? {
+                                ...prevsect,
+                                values: [...prevsect.values, {}],
+                                length: section.length + 1,
+                              }
+                            : prevsect
+                        )
+                      )
+                    }
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="icon">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Are you absolutely sure?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently
+                          delete the section. Make sure you have saved all
+                          changes.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction asChild>
+                          <Button
+                            variant="destructive"
+                            onClick={() =>
+                              setSections((prev) =>
+                                prev
+                                  .slice(
+                                    0,
+                                    prev.findIndex(
+                                      (sect) => section.id === sect.id
+                                    )
+                                  )
+                                  .concat(
+                                    prev.slice(
+                                      prev.findIndex(
+                                        (sect) => section.id === sect.id
+                                      ) + 1,
+                                      prev.length
+                                    ).map((prevsect)=>({...prevsect, id:prevsect.id-1}))
+                                  )
+                              )
+                            }
+                          >
+                            Delete
+                          </Button>
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </CardHeader>
               <CardContent className="space-y-2">
-                <FormBuilder
-                  formSchema={schemas[section.type]}
-                  initialValues={section.values || {}}
-                  handleFormSubmit={(values) =>
-                    handleFormSubmit(section.id, values)
-                  }
-                />{" "}
+                {Array(section.length)
+                  .fill(0)
+                  .map((_val, index) => {
+                    console.log(section.length, _val, index);
+                    return (
+                      <div
+                        className="border rounded-md p-3 flex flex-row justify-between"
+                        key={index}
+                      >
+                        <FormBuilder
+                          formSchema={schemas[section.type]}
+                          initialValues={section.values[index]}
+                          handleFormSubmit={(values) => {
+                            console.log(index);
+                            handleFormSubmit(section.id, index, values);
+                          }}
+                        />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you absolutely sure?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will
+                                permanently delete the sub-section. Make sure
+                                you have saved all changes.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction asChild>
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => {
+                                    setSections((prev) =>
+                                      prev.map((sect) =>
+                                        sect.id == section.id
+                                          ? {
+                                              ...sect,
+                                              length: sect.length - 1,
+                                              values: sect.values
+                                                .slice(0, index)
+                                                .concat(
+                                                  sect.values.slice(index + 1)
+                                                ),
+                                            }
+                                          : sect
+                                      )
+                                    );
+                                    // setCurrSection("0");
+                                  }}
+                                >
+                                  Delete
+                                </Button>
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    );
+                  })}
               </CardContent>
             </Card>
           </TabsContent>

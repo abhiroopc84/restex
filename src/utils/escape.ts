@@ -1,9 +1,5 @@
-/* eslint-disable no-useless-escape */
-
-
-
-const escapeFunction = (code) => {
-    const escapeCharacters = {
+const escapeFunction = (code: string) => {
+    const escapeCharacters: {[key: string]: [RegExp, string]} = {
         "&": [/&/g, "\\&"],
         "%": [/%/g, "\\%"],
         "$": [/\$/g, "\\$"],
@@ -23,7 +19,7 @@ const escapeFunction = (code) => {
         "“": [/“/g, "\\textquotedblleft{}"],
         "”": [/”/g, "\\textquotedblright{}"],
       };
-      for (let i in escapeCharacters){
+      for (const i in escapeCharacters){
         code = code.replace(escapeCharacters[i][0],escapeCharacters[i][1])
       }
     return code;

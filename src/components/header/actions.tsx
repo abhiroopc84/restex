@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { Trash2 } from "lucide-react"
-import { YamlContext } from "../context/yaml-provider"
+import { YamlContext } from "../../context/yaml-provider"
 import { useContext, useState } from "react"
 
 

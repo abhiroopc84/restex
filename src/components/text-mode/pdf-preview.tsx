@@ -1,6 +1,6 @@
 import { useContext } from "react";
-import { CompileStatusContext } from "../context/compilestatus-provider";
-import { PdfurlContext } from "../context/pdfurl-provider";
+import { CompileStatusContext } from "../../context/compilestatus-provider";
+import { PdfurlContext } from "../../context/pdfurl-provider";
 
 export const PdfPreviewer = () => {
   const {compileStatus} = useContext(CompileStatusContext);

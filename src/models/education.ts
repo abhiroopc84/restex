@@ -1,4 +1,4 @@
-import dateParser from "@/helpers/date-parser";
+import dateParser, { months } from "@/utils/date-parser";
 import { z } from "zod";
 
 const EducationSchema = z.object({
@@ -22,8 +22,13 @@ const EducationGuiSchema = z.object({
     location: z.string(),
     degree: z.string(),
     field: z.string().optional(),
-    start_date: z.date(),
-    end_date: z.date().optional(),
+    start_date: z.date({
+        required_error: "Please select a date",
+        invalid_type_error: "That's not a date!",
+      }).transform((date)=>`${months[date.getMonth()]}. ${date.getFullYear()}`),
+    end_date: z.date({
+        invalid_type_error: "That's not a date!",
+      }).transform((date)=>`${months[date.getMonth()]}. ${date.getFullYear()}`).optional(),
     current: z.boolean(),
     GPA: z.string().optional(),
     highlights: z.array(z.string()).optional(),

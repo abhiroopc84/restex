@@ -1,10 +1,11 @@
 import { ReactNode, createContext, useState } from "react"
 
-type sections = {
+export type sections = {
     id: number
     name: string
     type: string
-    values: { [key: string]: any };
+    length: number
+    values: [{ [key: string]: any }];
 }[]
 
 type SectionsState = {
@@ -13,14 +14,14 @@ type SectionsState = {
 }
 
 const initialState: SectionsState = {
-    sections: [{id: 0, name: "header", type: "header", values: {}}, { id: 1, name: "section1", type: "general", values: {} }],
+    sections: [{id: 0, name: "header", type: "header", length: 1, values: [{}]}, { id: 1, name: "section1", type: "general", length: 1, values: [{}] }],
     setSections: () => null,
 }
 
 export const SectionsContext = createContext(initialState);
 
 export const SectionsProvider = ({children} : {children:ReactNode}) => {
-    const [sections, setSections] = useState<sections>([{id: 0, name: "header", type: "header", values: {}},{ id: 1, name: "section1", type: "general", values: {} }]);
+    const [sections, setSections] = useState<sections>([{id: 0, name: "header", type: "header", length: 1, values: [{}]}, { id: 1, name: "section1", type: "general", length: 1, values: [{}] }]);
 
     return (
         <SectionsContext.Provider value={{sections, setSections}}>

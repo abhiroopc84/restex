@@ -1,4 +1,4 @@
-import dateParser from "@/helpers/date-parser";
+import dateParser, { months } from "@/utils/date-parser";
 import { z } from "zod";
 
 const PublicationSchema = z.object({
@@ -14,7 +14,7 @@ const PublicationSchema = z.object({
 const PublicationGuiSchema = z.object({
     title: z.string(),
     authors: z.array(z.string()),
-    date: z.date(),
+    date: z.date().transform((date)=>`${months[date.getMonth()]}. ${date.getFullYear()}`),
     journal: z.string(),
     doi: z.string().regex(/^(10\.\d{4,5}\/[\S]+[^;,.\s])$/,{ message: "Invalid doi" }),
 })

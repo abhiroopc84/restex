@@ -3,7 +3,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "../ui/hover-card"
 import { TabsList, TabsTrigger } from "../ui/tabs";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useContext } from "react";
-import { TemplateContext } from "../context/template-provider";
+import { TemplateContext } from "../../context/template-provider";
 
 export const Sidebar = () => {
   const { template, setTemplate } = useContext(TemplateContext);
@@ -44,7 +44,7 @@ export const Sidebar = () => {
             Select the template that best suits you.
           </HoverCardContent>
         </HoverCard>
-        <Select value={template} onValueChange={(event) => setTemplate(event)}>
+        <Select value={template} onValueChange={(newTemplate) => setTemplate(()=>newTemplate)}>
           <SelectTrigger>
             <SelectValue placeholder="Select a template" />
           </SelectTrigger>

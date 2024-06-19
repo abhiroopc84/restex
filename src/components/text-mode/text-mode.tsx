@@ -1,27 +1,37 @@
 import { Button } from "../ui/button";
 import { PdfPreviewer } from "./pdf-preview";
 import { TextEditor } from "./text-editor";
-import escapeFunction from "@/helpers/escape";
+import escapeFunction from "@/utils/escape";
 import { toast } from "sonner";
-import yamlParser from "@/helpers/yaml-parser";
+import yamlParser from "@/utils/yaml-parser";
 import faangpath from "@/templates/faangpath";
-import { formatLaTeX } from "@/helpers/latex-formatter";
-import latexCompiler from "@/helpers/latex-compiler";
-import { useContext } from "react";
-import { YamlContext } from "../context/yaml-provider";
-import { ErrorContext } from "../context/error-provider";
-import { ErrorOpenContext } from "../context/erroropen-provider";
-import { CompileStatusContext } from "../context/compilestatus-provider";
-import { LatexContext } from "../context/latex-provider";
-import { PdfurlContext } from "../context/pdfurl-provider";
+import { formatLaTeX } from "@/utils/latex-formatter";
+import latexCompiler from "@/utils/latex-compiler";
+import { useContext, useEffect, useState } from "react";
+import { YamlContext } from "../../context/yaml-provider";
+import { ErrorContext } from "../../context/error-provider";
+import { ErrorOpenContext } from "../../context/erroropen-provider";
+import { CompileStatusContext } from "../../context/compilestatus-provider";
+import { LatexContext } from "../../context/latex-provider";
+import { PdfurlContext } from "../../context/pdfurl-provider";
+import markdownToLatex from "@/utils/markdown-parser";
+import { EngineContext } from "../../context/engine-provider";
 
 export const TextMode = () => {
   const { yaml } = useContext(YamlContext);
   const { setError } = useContext(ErrorContext);
   const { setErrorOpen } = useContext(ErrorOpenContext);
-  const { setCompileStatus } = useContext(CompileStatusContext);
+  const { compileStatus, setCompileStatus } = useContext(CompileStatusContext);
   const { setLatex } = useContext(LatexContext);
   const { setPdfurl } = useContext(PdfurlContext);
+  const { engine } = useContext(EngineContext);
+  const [compilePromiseResolve, setCompilePromiseResolve] = useState(null);
+
+  useEffect(()=>{
+    if(compileStatus == "success" && compilePromiseResolve){
+      compilePromiseResolve("Render Successful!");
+    }
+  },[compileStatus, compilePromiseResolve]);
 
   const handleRender = () => {
     if (yaml == "") {
@@ -38,18 +48,29 @@ export const TextMode = () => {
           },
         });
       } else {
-        setCompileStatus("inprogress");
-        const latexCode = faangpath(yamlResult);
+        setCompileStatus(()=>"inprogress");
+        const compilePromise = new Promise((resolve)=>{
+          setCompilePromiseResolve(()=>resolve)
+        })
+        toast.promise(compilePromise, {
+          loading: 'Rendering...',
+          success: (data) => {
+            return `${data}`;
+          },
+          error: 'Error Occured!',
+        });
+        const mdLatexCode = faangpath(yamlResult);
+        const latexCode = markdownToLatex(mdLatexCode);
         const fCode = formatLaTeX(latexCode);
         (() => {
           setLatex(fCode);
         })();
         console.log(latexCode);
-        const url = latexCompiler(latexCode);
+        const url = latexCompiler(latexCode, engine);
         url.then((value) => {
           if (value) {
-            setCompileStatus("success");
-            setPdfurl(value);
+            setCompileStatus(()=>"success");
+            setPdfurl(()=>value);
           }
         });
       }

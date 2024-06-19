@@ -1,5 +1,5 @@
 import { z } from "zod";
-import dateParser from "@/helpers/date-parser";
+import dateParser, { months } from "@/utils/date-parser";
 
 const GeneralSchema = z.object({
   name: z.string(),
@@ -23,7 +23,7 @@ const GeneralGuiSchema = z.object({
   date: z.date({
     required_error: "Please select a date",
     invalid_type_error: "That's not a date!",
-  }),
+  }).transform((date)=>`${months[date.getMonth()]}. ${date.getFullYear()}`),
   highlights: z.array(z.string().min(1, "Field cannot be empty")).optional(),
 });
 

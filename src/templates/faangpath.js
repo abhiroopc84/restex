@@ -126,7 +126,7 @@ const publicationEntry = (input) => {
             authors = authors + `${e.authors[e.authors.length-1]}`
             publicationLatexCode = publicationLatexCode + `
             \\item \\vspace{3pt} \\textbf{${e.title}} \\hfill ${e.date}\\\\
-            \\vspace{3pt}{${authors})}}\\\\
+            \\vspace{3pt}{${authors}}\\\\
             {${e.doi}}\\hfill
             {${e.journal}}`
         });
@@ -187,17 +187,20 @@ const faangpath = (resumeObject) => {
     \\name{${header.name}}
     \\address{${headerKeys.includes("phone")?header.phone+" \\\\":""} ${header.location} \\\\ 
     \\href{mailto:${header.email}}{${header.email}}}
-    ${headerKeys.includes("social_networks")||headerKeys.includes("website")?`\\address{
-        ${headerKeys.includes("social_networks")?`${socialnetworksFormatter(header.social_networks)}`:""}
-        ${headerKeys.includes("website")?`\\\\ {${header.website}}`:""}}`:""}
+    ${headerKeys.includes("social_networks")||headerKeys.includes("website")?
+        `\\address{${headerKeys.includes("social_networks")?`${socialnetworksFormatter(header.social_networks)}`:""}${headerKeys.includes("website")?`\\\\ {${header.website}}`:""}}`:""}
     
     \\usepackage{needspace}    
     \\usepackage{lastpage}
     \\usepackage{fancyhdr}
+    \\usepackage{markdown}
     \\hypersetup{
         pdfauthor={${header.name}},
         pdftitle={${header.name}'s Resume},
     }
+        
+    \\input{glyphtounicode}
+    \\pdfgentounicode=1
 
     \\pagestyle{plain}
     \\fancyhf{}

@@ -4,11 +4,11 @@ import Experience from "@/models/experience";
 import General from "@/models/general";
 import OnelineSchema from "@/models/oneline";
 import Publication from "@/models/publication";
-import TextSchema from "@/models/text";
+import Text from "@/models/text";
 import { ZodSchema } from "zod";
 
 export const schemas: { [key: string]: ZodSchema } = {
-  text: TextSchema,
+  text: Text.TextSchema,
   education: Education.EducationSchema,
   experience: Experience.ExperienceSchema,
   general: General.GeneralSchema,
@@ -18,7 +18,7 @@ export const schemas: { [key: string]: ZodSchema } = {
 };
 
 export const guischemas: { [key: string]: ZodSchema } = {
-    text: TextSchema,
+    text: Text.TextGuiSchema,
     education: Education.EducationGuiSchema,
     experience: Experience.ExperienceGuiSchema,
     general: General.GeneralGuiSchema,
